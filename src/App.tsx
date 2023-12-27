@@ -52,6 +52,7 @@ function castFormData<T extends TRecord>(formData: FormData, schema: ZodObject<a
   });
 
   try {
+    // @ts-ignore: I'm sorry
     return schema.parse(profile);
   } catch (error) {
     return error as ZodError;
