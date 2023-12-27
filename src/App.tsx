@@ -1,14 +1,13 @@
-import { z, type ZodError, ZodObject, } from "zod";
+import { type FormEvent } from "react";
+import { z, type ZodError, type ZodObject, } from "zod";
 import Input from "./Input";
 import RadioInput from "./RadioInput";
-import { FormEvent } from "react";
 
 const ZProfileSchema = z.object({
   username: z.string(),
   email: z.string(),
   password: z.string(),
-  avatar: z.instanceof(File),
-  preferences: z.string().array(),
+  theme: z.string(),
 });
 type TProfile = z.infer<typeof ZProfileSchema>;
 
@@ -59,12 +58,20 @@ function castFormData<T extends TRecord>(formData: FormData, schema: ZodObject<a
   }
 }
 
-const PREFERENCES = new Map<"theme" | "notifications", Array<string>>(
-  [
-    ["theme", ["Dark", "Light", "System"]],
-    ["notifications", ["None", "Daily", "Weekly", "Monthly"]],
-  ]
-);
+const THEME_PREFERENCES = [
+  {
+    label: "Light",
+    value: "light",
+  },
+  {
+    label: "Dark",
+    value: "dark",
+  },
+  {
+    label: "System",
+    value: "system",
+  },
+];
 
 function App() {
 
@@ -80,18 +87,12 @@ function App() {
         <h1 className="font-mono text-2xl py-8">Create your Profile</h1>
         <form className="flex flex-col gap-6 font-sans" onSubmit={handleSubmit}>
           <Input className="rounded-md py-1 px-2 text-gray-900" label="Username" name="username" type="text" inputMode="text" autoComplete="username" autoFocus required />
-          <Input className="rounded-md py-1 px-2 text-gray-900" label="Email" name="email" type="email" inputMode="email" required />
+          <Input className="rounded-md py-1 px-2 text-gray-900" label="Email" name="email" type="email" inputMode="email" autoComplete="email" required />
           <fieldset name="preferences">
-            <legend className="text-white font-sans">Theme</legend>
+            <legend>Theme</legend>
             {
-              PREFERENCES.get("theme")!.map(pref => (
-                <RadioInput key={pref} className="accent-fuchsia-600 w-4 h-4" label={pref} name="theme" value={`theme.${pref.toLowerCase()}`} />
-              ))
-            }
-            <legend className="text-white mt-8 font-sans">Notifications</legend>
-            {
-              PREFERENCES.get("notifications")!.map(pref => (
-                <RadioInput key={pref} className="accent-fuchsia-600 w-4 h-4" label={pref} name="notifications" value={`notifications.${pref.toLowerCase()}`} />
+              THEME_PREFERENCES.map(option => (
+                <RadioInput key={option.value} className="accent-fuchsia-600 w-4 h-4" label={option.label} name="theme" value={option.value} />
               ))
             }
           </fieldset>
