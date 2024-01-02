@@ -12,6 +12,7 @@ type TInputProps = {
   inputMode?: TInputMode;
   className?: string;
   autoFocus?: boolean;
+  minLength?: number;
   required: boolean;
 }
 

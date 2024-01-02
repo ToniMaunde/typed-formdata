@@ -1,12 +1,12 @@
-import { type FormEvent } from "react";
-import { z, type ZodError, type ZodObject, } from "zod";
+import { useState, type FormEvent, ChangeEvent } from "react";
+import { z, ZodError, type ZodObject, } from "zod";
 import Input from "./Input";
 import RadioInput from "./RadioInput";
 
 const ZProfileSchema = z.object({
-  username: z.string(),
-  email: z.string(),
-  password: z.string(),
+  username: z.string().min(6),
+  email: z.string().email(),
+  password: z.string().min(6),
   theme: z.string(),
 });
 type TProfile = z.infer<typeof ZProfileSchema>;
@@ -75,19 +75,51 @@ const THEME_PREFERENCES = [
 ];
 
 function App() {
+  const [result, setResult] = useState<TProfile>();
+  const [thereWasAnError, setErrorStatus] = useState(false);
+  const [isSubmitting, setSubmissionStatus] = useState(false);
+  const [isRequired, setRequired] = useState(true);
+
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    const { checked } = e.currentTarget;
+    setRequired(!checked);
+  }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    setErrorStatus(false);
+    setSubmissionStatus(true);
     const formData = new FormData(e.currentTarget);
-    console.log(castFormData<TProfile>(formData, ZProfileSchema));
+
+    // Artificial timeout
+    setTimeout(() => {
+      const result = castFormData<TProfile>(formData, ZProfileSchema);
+      if (result instanceof ZodError) {
+        setErrorStatus(true);
+        // TODO: do you
+      } else {
+        setResult(result);
+      }
+      setSubmissionStatus(false);
+    }, 1000);
   }
 
   return (
     <>
       <main className="text-white max-w-[320px] mx-auto">
         <h1 className="font-mono text-2xl py-8">Create your Profile</h1>
+        {
+          thereWasAnError &&
+          <p className="font-semibold text-red-500 mb-6">Check the console, developer 🥳.
+          </p>
+        }
+        <div className="flex gap-1 mb-6">
+          <input type="checkbox" name="makeItFail" id="makeItFail" className="accent-fuchsia-600" onChange={handleChange} />
+          <label htmlFor="makeItFail">Get an error</label>
+        </div>
         <form className="flex flex-col gap-6 font-sans" onSubmit={handleSubmit}>
-          <Input className="rounded-md py-1 px-2 text-gray-900" label="Username" name="username" type="text" inputMode="text" autoComplete="username" autoFocus required />
+          <Input className="rounded-md py-1 px-2 text-gray-900" label="Username" name="username" type="text" inputMode="text" autoComplete="username" autoFocus minLength={6} required={isRequired} />
           <Input className="rounded-md py-1 px-2 text-gray-900" label="Email" name="email" type="email" inputMode="email" autoComplete="email" required />
           <fieldset name="preferences">
             <legend>Theme</legend>
@@ -97,9 +129,30 @@ function App() {
               ))
             }
           </fieldset>
-          <Input className="rounded-md py-1 px-2 text-gray-900" label="Password" name="password" type="password" inputMode="text" autoComplete="new-password" required />
-          <button type="submit" className="bg-fuchsia-600 font-sans font-bold py-2 px-4 text-white rounded-md">Register</button>
+          <Input className="rounded-md py-1 px-2 text-gray-900" label="Password" name="password" type="password" inputMode="text" autoComplete="new-password" minLength={6} required />
+          <button
+            type="submit"
+            className={`font-sans font-bold py-2 px-4 text-white rounded-md ${isSubmitting ? "bg-fuchsia-500" : "bg-fuchsia-600"}`}
+            disabled={isSubmitting}
+          >
+            {
+              isSubmitting ? "Registering..." : "Register"
+            }
+          </button>
         </form>
+        <div className="mt-6 p-4 rounded-md bg-gray-800 min-h-32">
+          <h2 className="text-lg/6 font-bold font-mono mb-2">Result</h2>
+          {
+            result && (
+              <>
+                <p>Username: {result.username}</p>
+                <p>Email: {result.email}</p>
+                <p>Theme: {result.theme}</p>
+                <p>Password: {result.password}</p>
+              </>
+            )
+          }
+        </div>
       </main>
     </>
   )
