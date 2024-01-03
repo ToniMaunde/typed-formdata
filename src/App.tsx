@@ -1,63 +1,9 @@
 import { useState, type FormEvent, ChangeEvent } from "react";
-import { z, ZodError, type ZodObject, } from "zod";
+import { ZodError } from "zod";
+import { castFormData } from "./util";
+import { ZProfileSchema, type TProfile } from "./types";
 import Input from "./Input";
 import RadioInput from "./RadioInput";
-
-const ZProfileSchema = z.object({
-  username: z.string().min(6),
-  email: z.string().email(),
-  password: z.string().min(6),
-  theme: z.string(),
-});
-type TProfile = z.infer<typeof ZProfileSchema>;
-
-type TRecord = Record<string, string | number | File | Array<string> | Array<number> | Array<File>>;
-function castFormData<T extends TRecord>(formData: FormData, schema: ZodObject<any>): T | ZodError {
-
-  function dedupeFormDataKeys(formData: FormData) {
-    const keySet = new Set<string>();
-
-    formData.forEach((_, key) => {
-      keySet.add(key);
-    })
-
-    return [...keySet];
-  }
-
-  type TZodShapeDefTypeName = "ZodString" | "ZodEffects" | "ZodArray";
-  type TKeyType = "multi-value" | "single-value";
-  type TMappedFormDataKeys = Map<string, TKeyType>;
-  function mapKeys(formData: FormData): TMappedFormDataKeys {
-    const keyMap = new Map<string, TKeyType>();
-    const uniqueKeys = dedupeFormDataKeys(formData);
-
-    uniqueKeys.forEach(key => {
-      const shapeFieldType = schema.shape[key]._def.typeName as TZodShapeDefTypeName;
-      if (shapeFieldType === "ZodArray") keyMap.set(key, "multi-value");
-      else keyMap.set(key, "single-value");
-    });
-
-    return keyMap;
-  };
-
-  const profile = {} as TRecord;
-  const uniqueKeys = mapKeys(formData);
-
-  uniqueKeys.forEach((value, key) => {
-    if (value === "single-value") {
-      profile[key] = formData.get(key) as string | File;
-    } else {
-      profile[key] = formData.getAll(key) as Array<string> | Array<File>;
-    }
-  });
-
-  try {
-    // @ts-ignore: I'm sorry
-    return schema.parse(profile);
-  } catch (error) {
-    return error as ZodError;
-  }
-}
 
 const THEME_PREFERENCES = [
   {
@@ -97,7 +43,8 @@ function App() {
       const result = castFormData<TProfile>(formData, ZProfileSchema);
       if (result instanceof ZodError) {
         setErrorStatus(true);
-        // TODO: do you
+        console.log("Here's your error ", result);
+        console.log({result});
       } else {
         setResult(result);
       }
@@ -129,6 +76,7 @@ function App() {
               ))
             }
           </fieldset>
+          <input type="hidden" name="extra" value="none" />
           <Input className="rounded-md py-1 px-2 text-gray-900" label="Password" name="password" type="password" inputMode="text" autoComplete="new-password" minLength={6} required />
           <button
             type="submit"
