@@ -24,11 +24,11 @@ function App() {
   const [result, setResult] = useState<TProfile>();
   const [thereWasAnError, setErrorStatus] = useState(false);
   const [isSubmitting, setSubmissionStatus] = useState(false);
-  const [isRequired, setRequired] = useState(true);
+  const [createArtificialError, setArtificialError] = useState(false);
 
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
     const { checked } = e.currentTarget;
-    setRequired(!checked);
+    setArtificialError(checked);
   }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -37,13 +37,14 @@ function App() {
     setErrorStatus(false);
     setSubmissionStatus(true);
     const formData = new FormData(e.currentTarget);
+    // Create an artificial error
+    if (createArtificialError) formData.delete("username");
 
     // Artificial timeout
     setTimeout(() => {
       const result = castFormData<TProfile>(formData, ZProfileSchema);
       if (result instanceof ZodError) {
         setErrorStatus(true);
-        console.log("Here's your error ", result);
         console.log({result});
       } else {
         setResult(result);
@@ -66,7 +67,7 @@ function App() {
           <label htmlFor="makeItFail">Get an error</label>
         </div>
         <form className="flex flex-col gap-6 font-sans" onSubmit={handleSubmit}>
-          <Input className="rounded-md py-1 px-2 text-gray-900" label="Username" name="username" type="text" inputMode="text" autoComplete="username" autoFocus minLength={6} required={isRequired} />
+          <Input className="rounded-md py-1 px-2 text-gray-900" label="Username" name="username" type="text" inputMode="text" autoComplete="username" autoFocus minLength={6} required />
           <Input className="rounded-md py-1 px-2 text-gray-900" label="Email" name="email" type="email" inputMode="email" autoComplete="email" required />
           <fieldset name="preferences">
             <legend>Theme</legend>
