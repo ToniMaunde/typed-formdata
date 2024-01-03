@@ -77,7 +77,6 @@ function App() {
               ))
             }
           </fieldset>
-          <input type="hidden" name="extra" value="none" />
           <Input className="rounded-md py-1 px-2 text-gray-900" label="Password" name="password" type="password" inputMode="text" autoComplete="new-password" minLength={6} required />
           <button
             type="submit"
