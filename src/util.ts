@@ -1,7 +1,7 @@
-import type { ZodObject, ZodError } from "zod";
+import {ZodError, ZodObject} from "zod";
 
 type TRecord = Record<string, string | number | File | Array<string> | Array<number> | Array<File>>;
-export function castFormData<T extends TRecord>(formData: FormData, schema: ZodObject<any>): T | ZodError {
+export function castFormData<T extends TRecord>(formData: FormData, schema: ZodObject<any>) {
 
   function dedupeFormDataKeys(formData: FormData) {
     const keySet = new Set<string>();
@@ -44,11 +44,9 @@ export function castFormData<T extends TRecord>(formData: FormData, schema: ZodO
     }
   });
 
-  try {
-    // @ts-ignore: I'm sorry
-    return schema.parse(profile);
-  } catch (error) {
-    return error as ZodError;
-  }
+  const result = schema.safeParse(profile)
+
+  return (result.success) ? result.data as T: result.error as ZodError
+
 }
 
